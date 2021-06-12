@@ -1,3 +1,7 @@
 TOKEN.py
 service_account.json
 __pycache__/
+txt
+discord_token.txt
+.vscode
+my_venv

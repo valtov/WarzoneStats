@@ -1,5 +1,5 @@
 import urllib
-import json, requests, requests_cache
+import json, requests
 import statistics
 class WarzoneTracker:
 
@@ -20,11 +20,10 @@ class WarzoneTracker:
     }
 
     def __init__(self):
-        self.overview = 'https://api.tracker.gg/api/v2/warzone/standard/profile/battlenet/{}/' # username
+        self.overview = 'https://api.tracker.gg/api/v2/warzone/standard/profile/battlenet/{}/' # .format(username_of_battlenet)
         self.matches = 'https://api.tracker.gg/api/v2/warzone/standard/matches/battlenet/{}?type=wz'
         self.matches_next = 'https://api.tracker.gg/api/v2/warzone/standard/matches/battlenet/{}?type=wz&next={}'
         self.match_info = 'https://api.tracker.gg/api/v2/warzone/standard/matches/{}'
-        print(WarzoneTracker.headers)
     
     def get_overview(self, player_username):
         endpoint = self.overview.format(self._convert_username(player_username))
@@ -35,16 +34,28 @@ class WarzoneTracker:
         endpoint = self.matches.format(self._convert_username(player_username))
         r = requests.get(endpoint, headers=WarzoneTracker.headers)
         info = r.json()
-        matches = info['data']['matches']
-        n = len(matches)
-        next_match = info['data']['metadata']['next']
+        try:
+            matches = info['data']['matches']
+            n = len(matches)
+            next_match = info['data']['metadata']['next']
+        except Exception as e:
+            if 'errors' in info:
+                return info['errors']
+            return e
         while num_matches > n:
             endpoint = self.matches_next.format(self._convert_username(player_username), next_match)
             r = requests.get(endpoint, headers=WarzoneTracker.headers)
             info = r.json()
-            matches += info['data']['matches']
-            n += (len(matches) - n)
-            next_match = info['data']['metadata']['next']
+            try:
+                matches += info['data']['matches']
+                n += (len(matches) - n)
+                next_match = info['data']['metadata']['next']
+            except Exception as e:
+                if 'errors' in info:
+                    print(info['errors'])
+                print(e)
+                num_matches = n
+                break
         return matches[:num_matches]
     
     def get_match_info(self, match_id):
@@ -60,10 +71,8 @@ class WarzoneTracker:
     def rank_last_k_lobbies(self, k, player_username):
         matches = self.get_matches(k, player_username)
         ids = []
-
         for match in matches:
             ids.append(match['attributes']['id'])
-        
         kds = []
         for i in ids:
             kds.append(  (self.get_match_kd(i), i)  )
@@ -89,14 +98,13 @@ class WarzoneTracker:
                 top5        = player['attributes']['lifeTimeStats']['top5']
                 lifetime_stats.append((lifetime_kd, wins, games, top5, match_kd))
                 highest_kd = lifetime_kd if lifetime_kd > highest_kd else highest_kd
-
             else:
                 num_players_private += 1
                 match_kd = player['stats']['kdRatio']['value']
                 match_kds.append(match_kd)
-        mean_kd = statistics.mean([stat[0] for stat in lifetime_stats])
-        median_kd = statistics.median([stat[0] for stat in lifetime_stats])
-        match_mean = statistics.mean([stat for stat in match_kds])
+        mean_kd      = statistics.mean([stat[0] for stat in lifetime_stats])
+        median_kd    = statistics.median([stat[0] for stat in lifetime_stats])
+        match_mean   = statistics.mean([stat for stat in match_kds])
         match_median = statistics.median([stat for stat in match_kds])
         return {'median_kd': median_kd, 'mean_kd':mean_kd, 'num_players_private':num_players_private, 'private_players_mean':match_mean, 'private_players_median':match_median}
 

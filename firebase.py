@@ -10,31 +10,27 @@ class FirestoreConnection:
         self.db = firestore.client()
 
     def get_users(self):
-        users_ref = self.db.collection('users').document('discord_mapping')
-        docs = users_ref.get()
-        return docs.to_dict()
+        docs = self.db.collection('users').stream()
+        return [{doc.id:doc.to_dict()} for doc in docs]
 
     def get_user(self, discord_name):
-        users_ref = self.db.collection('users').document('discord_mapping')
-        docs = users_ref.get()
-        users = docs.to_dict()
-        if discord_name not in users:
-            return None
-        return users[discord_name]
+        doc = self.db.collection('users').document(discord_name).get()
+        return doc.to_dict()
 
-    def add_user(self, discord_name, platform, username):
-        doc_ref = self.db.collection('users').document('discord_mapping')
-        doc_ref.set({
-            discord_name: {
-                'platform':platform,
-                'username':username
-            }
-        }, merge=True)
+    def set_user(self, discord_name, username, platform, default):
+        platforms = ['activision', 'playstation', 'xbox', 'battlenet']
+        if platform not in platforms:
+            return False
+        data = {
+            platform:username,
+            'default':default
+        }
+        self.db.collection('users').document(discord_name).set(data)
+        return True
 
 if __name__ == '__main__':
     print('Started main')
     con = FirestoreConnection()
     print(con.get_users())
-    # print(con.get_user('shuttlesneaks#8070'))
-    # con.add_user('shuttlesneaks#8070', 'pc', 'zombieslaya3#1152')
-    # print(con.get_users())
+    print(con.set_user('shuttlesneaks#8070', 'zombieslaya3#1152', 'activision'))
+    print(con.get_user('shuttlesneaks#8070'))

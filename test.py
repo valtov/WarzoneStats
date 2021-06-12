@@ -1,5 +1,10 @@
-import requests
-from warzone import WarzoneTracker
+from firebase import FirestoreConnection
+
+con = FirestoreConnection()
+succ = con.set_user('shuttlesneaks#0000', 'zombieslaa', 'battlenet')
+print(succ)
+# import requests
+# from warzone import WarzoneTracker
 # headers = {
 #     'authority': 'api.tracker.gg',
 #     'cache-control': 'max-age=0',
@@ -20,12 +25,12 @@ from warzone import WarzoneTracker
 # print(response.json()['data'])
 
 
-username = 'zombieslaya3#1152'
-obj = WarzoneTracker()
+# username = 'zombieslaya3#1152'
+# obj = WarzoneTracker()
 
-kds = obj.rank_last_k_lobbies(10, username)
-print(kds)
-with open('stats.txt', 'w') as f:
-    f.write(str(kds))
+# kds = obj.rank_last_k_lobbies(10, username)
+# print(kds)
+# with open('stats.txt', 'w') as f:
+#     f.write(str(kds))
 
-print('Done')
+# print('Done')
