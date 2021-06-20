@@ -1,6 +1,9 @@
-import urllib
-import json, requests
+import urllib.parse
+import json
+import requests
 import statistics
+
+
 class WarzoneTracker:
 
     headers = {
@@ -20,17 +23,19 @@ class WarzoneTracker:
     }
 
     def __init__(self):
-        self.overview = 'https://api.tracker.gg/api/v2/warzone/standard/profile/battlenet/{}/' # .format(username_of_battlenet)
+        # .format(username_of_battlenet)
+        self.overview = 'https://api.tracker.gg/api/v2/warzone/standard/profile/battlenet/{}/'
         self.matches = 'https://api.tracker.gg/api/v2/warzone/standard/matches/battlenet/{}?type=wz'
         self.matches_next = 'https://api.tracker.gg/api/v2/warzone/standard/matches/battlenet/{}?type=wz&next={}'
         self.match_info = 'https://api.tracker.gg/api/v2/warzone/standard/matches/{}'
-    
+
     def get_overview(self, player_username):
-        endpoint = self.overview.format(self._convert_username(player_username))
+        endpoint = self.overview.format(
+            self._convert_username(player_username))
         r = requests.get(endpoint, headers=WarzoneTracker.headers)
         return r.json()
-        
-    def get_matches(self, num_matches, player_username):
+
+    def get_k_matches(self, k, player_username):
         endpoint = self.matches.format(self._convert_username(player_username))
         r = requests.get(endpoint, headers=WarzoneTracker.headers)
         info = r.json()
@@ -42,8 +47,9 @@ class WarzoneTracker:
             if 'errors' in info:
                 return info['errors']
             return e
-        while num_matches > n:
-            endpoint = self.matches_next.format(self._convert_username(player_username), next_match)
+        while k > n:
+            endpoint = self.matches_next.format(
+                self._convert_username(player_username), next_match)
             r = requests.get(endpoint, headers=WarzoneTracker.headers)
             info = r.json()
             try:
@@ -54,10 +60,18 @@ class WarzoneTracker:
                 if 'errors' in info:
                     print(info['errors'])
                 print(e)
-                num_matches = n
+                k = n
                 break
-        return matches[:num_matches]
+        return matches[:k]
     
+    def get_matches(self, player_username):
+        endpoint = self.matches.format(self._convert_username(player_username))
+        r = requests.get(endpoint, headers=WarzoneTracker.headers)
+        matches = r.json()
+        if 'errors' in matches:
+            return matches['errors']
+        return matches
+
     def get_match_info(self, match_id):
         endpoint = self.match_info.format(match_id)
         r = requests.get(endpoint, headers=WarzoneTracker.headers)
@@ -69,18 +83,19 @@ class WarzoneTracker:
         return kd
 
     def rank_last_k_lobbies(self, k, player_username):
-        matches = self.get_matches(k, player_username)
+        matches = self.get_k_matches(k, player_username)
         ids = []
         for match in matches:
             ids.append(match['attributes']['id'])
         kds = []
         for i in ids:
-            kds.append(  (self.get_match_kd(i), i)  )
+            kds.append((self.get_match_kd(i), i))
         return kds
 
     def get_match_kd(self, match_id):
         info = self.get_match_info(match_id)
-        lifetime_stats = [] # entries: (0:lifetime_kd, 1:lifetime_wins, 2:lifetime_games, 3:lifetime_top5, 4:match_kd)
+        # entries: (0:lifetime_kd, 1:lifetime_wins, 2:lifetime_games, 3:lifetime_top5, 4:match_kd)
+        lifetime_stats = []
         match_kds = []
         # lifetimeKds = []
         # lifetimeWins = []
@@ -91,26 +106,23 @@ class WarzoneTracker:
         num_players_private = 0
         for player in info['data']['segments']:
             if 'lifeTimeStats' in player['attributes']:
-                match_kd    = player['stats']['kdRatio']['value']
+                match_kd = player['stats']['kdRatio']['value']
                 lifetime_kd = player['attributes']['lifeTimeStats']['kdRatio']
-                wins        = player['attributes']['lifeTimeStats']['wins']
-                games       = player['attributes']['lifeTimeStats']['gamesPlayed']
-                top5        = player['attributes']['lifeTimeStats']['top5']
-                lifetime_stats.append((lifetime_kd, wins, games, top5, match_kd))
+                wins = player['attributes']['lifeTimeStats']['wins']
+                games = player['attributes']['lifeTimeStats']['gamesPlayed']
+                top5 = player['attributes']['lifeTimeStats']['top5']
+                lifetime_stats.append(
+                    (lifetime_kd, wins, games, top5, match_kd))
                 highest_kd = lifetime_kd if lifetime_kd > highest_kd else highest_kd
             else:
                 num_players_private += 1
                 match_kd = player['stats']['kdRatio']['value']
                 match_kds.append(match_kd)
-        mean_kd      = statistics.mean([stat[0] for stat in lifetime_stats])
-        median_kd    = statistics.median([stat[0] for stat in lifetime_stats])
-        match_mean   = statistics.mean([stat for stat in match_kds])
+        mean_kd = statistics.mean([stat[0] for stat in lifetime_stats])
+        median_kd = statistics.median([stat[0] for stat in lifetime_stats])
+        match_mean = statistics.mean([stat for stat in match_kds])
         match_median = statistics.median([stat for stat in match_kds])
-        return {'median_kd': median_kd, 'mean_kd':mean_kd, 'num_players_private':num_players_private, 'private_players_mean':match_mean, 'private_players_median':match_median}
-
-        
+        return {'median_kd': median_kd, 'mean_kd': mean_kd, 'num_players_private': num_players_private, 'private_players_mean': match_mean, 'private_players_median': match_median}
 
     def _convert_username(self, username):
         return urllib.parse.quote(username)
-
-
