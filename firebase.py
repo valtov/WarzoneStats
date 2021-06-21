@@ -61,6 +61,9 @@ class FirestoreConnection:
         self.db.collection('matches').document(id).set(match_info)
         return True
 
+    def get_match(self, match_id):
+        return self.db.collection('matches').document(match_id).get().to_dict()
+
     def set_overview(self, discord_name, overview):
         new_timestamp = {'timestamp_overview': firestore.SERVER_TIMESTAMP}
         # doc = self.db.collection('users').document(discord_name).get()

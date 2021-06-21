@@ -2,7 +2,7 @@ import urllib.parse
 import json
 import requests
 import statistics
-
+import heapq
 
 class WarzoneTracker:
 
@@ -76,6 +76,69 @@ class WarzoneTracker:
         endpoint = self.match_info.format(match_id)
         r = requests.get(endpoint, headers=WarzoneTracker.headers)
         return r.json()
+    
+    def get_match_stats(self, player_username, match_info):
+        base_username = player_username.split('#')[0]
+        try:
+            _ = match_info['data']['segments'][0]['stats']['kills']['value']
+        except:
+            return None
+        try:
+            if not [segment for segment in match_info['data']['segments'] if segment['attributes']['platformUserIdentifier'].lower() != base_username.lower()]:
+                return None
+        except:
+            return None
+        
+        # TO BE FILLED OUT
+        stats = {
+            'match_kd': 0,
+            'lifetime_wins':0,
+            'lifetime_games':0,
+            'highest_team_kd': 0,
+            'highest_lifetime_kd': [0,0,0],
+            'lowest_lifetime_kd': [0,0,0],
+            'team': {
+                'kd': 0,
+                'placement': 0
+            }
+        }
+        teams = {} # team_fifteen : {'bob':kd, 'mark':kd} and so on
+        player_team = {}
+        match_id     = match_info['data']['attributes']['id']
+        player_count = match_info['data']['metadata']['playerCount']
+        mode_name    = match_info['data']['metadata']['modeName']
+        timestamp    = match_info['data']['metadata']['timestamp']
+        team_count   = match_info['data']['metadata']['teamCount']
+        match_kd     = match_info['data']['attributes']['avgKd']['avgKd']
+        kd_histogram = match_info['data']['attributes']['kdHistogram']
+        link = f'https://cod.tracker.gg/warzone/match/{match_id}?handle={base_username}'
+        lifetime_wins = []
+        lifetime_games = []
+        
+        highest_kds = []
+        lowest_kds = []
+        num_players_private = 0
+        for player in match_info['data']['segments']:
+            team = player['attributes']['team']
+            if team in teams:
+                teams[team].append(player)
+            else:
+                teams[team] = [player]
+
+            curr_username = player['attributes']['platformUserIdentifier']
+            if curr_username.lower() == base_username.lower():
+                player_team = player['attributes']['team']
+                placement = player['metadata']['placement']['value']
+            
+            if 'lifeTimeStats' in player['attributes']:
+                lifetime_wins.append(player['attributes']['lifeTimeStats']['wins'])
+                lifetime_games.append(player['attributes']['lifeTimeStats']['gamesPlayed'])
+            else:
+                num_players_private += 1
+        
+        return stats
+        
+        
 
     def get_player_kd(self, player_username):
         info = self.get_overview(player_username)
@@ -97,11 +160,6 @@ class WarzoneTracker:
         # entries: (0:lifetime_kd, 1:lifetime_wins, 2:lifetime_games, 3:lifetime_top5, 4:match_kd)
         lifetime_stats = []
         match_kds = []
-        # lifetimeKds = []
-        # lifetimeWins = []
-        # lifetimeGames = []
-        # lifetimeTop5 = []
-        # matchKds = []
         highest_kd = 0
         num_players_private = 0
         for player in info['data']['segments']:
@@ -126,3 +184,12 @@ class WarzoneTracker:
 
     def _convert_username(self, username):
         return urllib.parse.quote(username)
+
+if __name__ == '__main__':
+    wz = WarzoneTracker()
+    username = 'zombieslaya3#1152'
+    import json
+    with open('./txt/match_info.json') as f:
+        info = json.load(f)
+    print(wz.get_match_stats(username, info))
+    # urllib.parse.unquote('/warzone/profile/atvi/Steezy%234772802/overview')
