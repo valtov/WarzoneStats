@@ -90,18 +90,7 @@ class WarzoneTracker:
             return None
         
         # TO BE FILLED OUT
-        stats = {
-            'match_kd': 0,
-            'lifetime_wins':0,
-            'lifetime_games':0,
-            'highest_team_kd': 0,
-            'highest_lifetime_kd': [0,0,0],
-            'lowest_lifetime_kd': [0,0,0],
-            'team': {
-                'kd': 0,
-                'placement': 0
-            }
-        }
+
         teams = {} # team_fifteen : {'bob':kd, 'mark':kd} and so on
         player_team = {}
         match_id     = match_info['data']['attributes']['id']
@@ -135,7 +124,35 @@ class WarzoneTracker:
                 lifetime_games.append(player['attributes']['lifeTimeStats']['gamesPlayed'])
             else:
                 num_players_private += 1
-        
+        teams_processed = {}
+        highest_team_kd = 0
+        for team_name, team in teams.items():
+            avg = 0
+            total = len(team)
+            for person in team:
+                try:
+                    avg += person['attributes']['lifeTimeStats']['kdRatio']
+                except Exception:
+                    total -= 1
+            avg = avg / total
+            if avg > highest_team_kd:
+                highest_team_kd = avg
+            teams_processed[team_name] = avg
+        highest_lifetime_kd = []
+        for _ in range(3):
+            highest_lifetime_kd.append(heapq.heappop(kd_histogram))
+        stats = {
+            'match_kd': match_kd,
+            'lifetime_wins':sum(lifetime_wins)/len(lifetime_wins),
+            'lifetime_games':sum(lifetime_games)/len(lifetime_games),
+            'highest_team_kd': highest_team_kd,
+            'highest_lifetime_kd': highest_lifetime_kd,
+            'lowest_lifetime_kd': [0,0,0],
+            'team': {
+                'kd': 0,
+                'placement': 0
+            }
+        }
         return stats
         
         
