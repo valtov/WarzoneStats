@@ -126,6 +126,9 @@ class WarzoneTracker:
                 num_players_private += 1
         teams_processed = {}
         highest_team_kd = 0
+        highest_team_placement = 0
+        my_team_kd = 0
+        my_team = []
         for team_name, team in teams.items():
             avg = 0
             total = len(team)
@@ -138,19 +141,41 @@ class WarzoneTracker:
             if avg > highest_team_kd:
                 highest_team_kd = avg
             teams_processed[team_name] = avg
+            if team_name == player_team:
+                my_team_kd = avg
+                for person in team:
+                    try:
+                        lifetime_stats = person['attributes']['lifeTimeStats']
+                    except Exception:
+                        lifetime_stats = None
+                    my_team.append({
+                        'name': person['attributes']['platformUserIdentifier'],
+                        'lifetime_stats': lifetime_stats,
+                        'url': person['metadata']['profileUrl'],
+                        'kills': person['stats']['kills']['value']
+
+
+                    })
         highest_lifetime_kd = []
+        lowest_lifetime_kd = []
+        heapq._heapify_max(kd_histogram)
         for _ in range(3):
-            highest_lifetime_kd.append(heapq.heappop(kd_histogram))
+            highest_lifetime_kd.append(heapq._heappop_max(kd_histogram))
+        heapq.heapify(kd_histogram)
+        for _ in range(3):
+            lowest_lifetime_kd.append(heapq.heappop(kd_histogram))
+        
         stats = {
             'match_kd': match_kd,
             'lifetime_wins':sum(lifetime_wins)/len(lifetime_wins),
             'lifetime_games':sum(lifetime_games)/len(lifetime_games),
             'highest_team_kd': highest_team_kd,
             'highest_lifetime_kd': highest_lifetime_kd,
-            'lowest_lifetime_kd': [0,0,0],
+            'lowest_lifetime_kd': lowest_lifetime_kd,
             'team': {
-                'kd': 0,
-                'placement': 0
+                'kd': my_team_kd,
+                'placement': placement,
+                'teammates': []
             }
         }
         return stats
