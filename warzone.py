@@ -166,6 +166,7 @@ class WarzoneTracker:
             lowest_lifetime_kd.append(heapq.heappop(kd_histogram))
         
         stats = {
+            'date': match_info['data']['attributes']['id'],
             'match_kd': match_kd,
             'lifetime_wins':sum(lifetime_wins)/len(lifetime_wins),
             'lifetime_games':sum(lifetime_games)/len(lifetime_games),
@@ -175,16 +176,15 @@ class WarzoneTracker:
             'team': {
                 'kd': my_team_kd,
                 'placement': placement,
-                'teammates': []
+                'teammates': my_team
             }
         }
         return stats
         
         
 
-    def get_player_kd(self, player_username):
-        info = self.get_overview(player_username)
-        kd = info['data']['segments'][1]['stats']['kdRatio']['value']
+    def get_player_kd(self, overview):
+        kd = overview['data']['segments'][1]['stats']['kdRatio']['value']
         return kd
 
     def rank_last_k_lobbies(self, k, player_username):

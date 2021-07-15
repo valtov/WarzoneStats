@@ -78,18 +78,24 @@ async def on_ready():
 async def kd(ctx):
     user = db.get_user(str(ctx.author))
     if user is None:
-        await ctx.send('Must be registered! Canceling.')
+        await ctx.send('Must be registered with !register. Cancelling.')
+        return
     platform = user['default']
     username = user[platform]
-    kd = wz.get_player_kd(username)
-    await ctx.send(f'KD: [{kd}]')
+    overview = db.get_overview(str(ctx.author))
+    if overview is None:
+        overview = wz.get_overview(username)
+        db.set_overview(str(ctx.author), overview)
+    kd = wz.get_player_kd(overview)
+    await ctx.send(f'{username} KD: [{kd}]')
+
 
 
 @client.command()
 async def stats(ctx, gamemode=0):
     mode = {0:'Lifetime', 1:'Battle Royal', 2:'Plunder'}
     if gamemode not in [0,1,2]:
-        await ctx.send('Invalid gamemode! Must be either 0, 1 or 2 where 0=lifetime, 1=battle royale only, 2=plunder only. Canceling.')
+        await ctx.send('Invalid gamemode! Must be either 0, 1 or 2 where 0=lifetime, 1=battle royale only, 2=plunder only. Cancelling.')
         return
     discord_name = str(ctx.author)
     user = db.get_user(discord_name)
@@ -112,7 +118,7 @@ async def stats(ctx, gamemode=0):
         embed.add_field(name=name, value=stat['value'], inline=True)
 
     _kd = overview['data']['segments'][1]['stats']['kdRatio']['value']
-    level_image = overview['data']['segments'][0]['stats']['level']['metadata']['imageUrl']
+    level_image = overview['data']['segments'][0]['stats']['prestige']['metadata']['imageUrl']
 
     embed.set_author(name=username.split('#')[0], icon_url=level_image)
     for rank in ranks:
