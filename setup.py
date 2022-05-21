@@ -22,7 +22,7 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=[],
+    install_requires=['requests'],
     keywords=['python', 'warzone', 'tracker', 'tracker.gg', 'sbmm', 'kd'],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
