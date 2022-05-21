@@ -47,7 +47,7 @@ class Api:
         self.login(username, ssoCookie)
 
     def login(self, username, ssoCookie):
-        self.username = Api._convert_username(username)
+        self.username = self._convert_username(username)
         self.ssoCookie = ssoCookie
         self.headers = Api.headers
         self.headers['Atvi-Auth'] = ssoCookie

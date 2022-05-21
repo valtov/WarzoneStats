@@ -1,6 +1,6 @@
 from statistics import mean
 
-class Parser:
+class ParserGG:
     
     def __init__(self):
         pass
