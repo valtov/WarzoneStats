@@ -17,6 +17,7 @@ setup(
     version=VERSION,
     author="valtov",
     author_email="<vladialtv@gmail.com>",
+    url = 'https://github.com/valtov/WarzoneStats',
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
     long_description=long_description,
