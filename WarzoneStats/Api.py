@@ -57,7 +57,7 @@ class Api:
         self.loggedIn = True
     
     def get_profile(self):
-        url = Api.baseUrl + Api.Endpoints.profile.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
+        url = Api.baseUrl + Api.Endpoints.profile.value.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
         r = requests.get(url, headers=self.headers)
         if r.status_code > 299:
             self.loggedIn = False
@@ -65,7 +65,7 @@ class Api:
         return r.json()
 
     def get_recentMatches(self):
-        url = Api.baseUrl + Api.Endpoints.recentMatches.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
+        url = Api.baseUrl + Api.Endpoints.recentMatches.value.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
         r = requests.get(url, headers=self.headers)
         if r.status_code > 299:
             self.loggedIn = False
@@ -73,7 +73,7 @@ class Api:
         return r.json()
     
     def get_matches(self):
-        url = Api.baseUrl + Api.Endpoints.matches.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
+        url = Api.baseUrl + Api.Endpoints.matches.value.format(platform=self.platform, endpointType=self.endpointType, username=self.username)
         r = requests.get(url, headers=self.headers)
         if r.status_code > 299:
             self.loggedIn = False
@@ -81,7 +81,7 @@ class Api:
         return r.json()
     
     def get_matchDetails(self, matchId):
-        url = Api.baseUrl + Api.Endpoints.matchDetails.format(platform=self.platform, matchId=matchId)
+        url = Api.baseUrl + Api.Endpoints.matchDetails.value.format(platform=self.platform, matchId=matchId)
         r = requests.get(url, headers=self.headers)
         if r.status_code > 299:
             print(f'Request error occured, returned status code {r.status_code}.\n{r.text}\nMost likely matchId is invalid.')
