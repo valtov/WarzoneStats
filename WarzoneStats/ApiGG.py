@@ -34,10 +34,10 @@ class ApiGG:
 
         response = requests.get('https://app.wzstats.gg/v2/player/match/withPlayers/', params=params, headers=ApiGG.headers)
         if response.status_code > 299:
-            return response.json()
-        else:
             print(f'Response code: [{response.status_code}]\n\n{response.text}')
             return None
+        else:
+            return response.json()
 
 if __name__ == '__main__':
     username = 'nrg joewo#2631118'
