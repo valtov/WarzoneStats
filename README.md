@@ -25,9 +25,13 @@ Copy and save this value to use in the package
 from WarzoneStats import Api
 
 username = 'huskerrs#1343'
+
+# Can see the platform values by referencing Api.Platforms
+platform = 'battle' 
+
 sso = 'Get this value from the ACT_SSO_COOKIE that is set in Chrome by logging into activision.com'
 
-api = Api(username, sso)
+api = Api(username, platform, sso)
 
 # You can view all sample responses in the Sample Endpoint Responses Folder
 
@@ -76,7 +80,17 @@ stats = api.get_stats(username, platform)
 
 parser = ParserGG()
 
-print(parser.get_average_lobby_kd(stats))
+print(parser.get_average_kd_lobbies(stats))
+
+''' and '''
+
+# Get this from either Api or ApiGG response
+match_id = '6702851451945654660'
+
+match = api.get_match(match_id)
+
+print(parser.get_average_lobby_kd(match)
+
 
 ```
 

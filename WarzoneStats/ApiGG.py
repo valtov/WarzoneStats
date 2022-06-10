@@ -38,6 +38,18 @@ class ApiGG:
             return None
         else:
             return response.json()
+    
+    def get_match(self, match_id):
+        params = {
+            'matchId': match_id,
+        }
+
+        response = requests.get('https://app.wzstats.gg/v2/', params=params, headers=ApiGG.headers)
+        if response.status_code > 299:
+            print(f'Response code: [{response.status_code}]\n\n{response.text}')
+            return None
+        else:
+            return response.json()
 
 if __name__ == '__main__':
     username = 'nrg joewo#2631118'
