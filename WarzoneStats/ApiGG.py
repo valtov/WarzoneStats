@@ -20,7 +20,7 @@ class ApiGG:
     def __init__(self):
         pass
     
-    def get_stats(self, username, platform):
+    def get_stats(self, username, platform, skip=True):
         platforms = ['battle', 'xbl', 'psn', 'acti']
         
         if platform not in platforms:
@@ -37,8 +37,24 @@ class ApiGG:
             print(f'Response code: [{response.status_code}]\n\n{response.text}')
             return None
         else:
-            return response.json()
-    
+            stats = response.json()
+            if skip:
+                return stats
+            # If a match has not been loaded on wzstats.gg yet, it will not have the matchStatData field
+            # This goes one by one through every match to check if it has the matchStatData field and if
+            # it doesnt, it makes another call to wzstats to get the full data on that match and fills in
+            # he matchStatData field. This functionality is turned off by default
+            else:
+                for i, match in enumerate(stats['matches']):
+                    if 'matchStatData' not in match:
+                        try:
+                            id = match['id']
+                            full_match = self.get_match(id)
+                            stats['matches'][i]['matchStatData'] = full_match['matchStatData']
+                        except:
+                            continue
+                return stats
+
     def get_match(self, match_id):
         params = {
             'matchId': match_id,
